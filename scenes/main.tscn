@@ -1,0 +1,50 @@
+[gd_scene load_steps=9 format=3 uid="uid://cqwum05n6t262"]
+
+[ext_resource type="Texture2D" uid="uid://b32d25wwrlil8" path="res://assets/textures/spaceSky.exr" id="1_0wfyh"]
+[ext_resource type="PackedScene" uid="uid://bixd4b6guwuqi" path="res://scenes/player.tscn" id="3_jyhfs"]
+[ext_resource type="PackedScene" uid="uid://bh2j8pyoa7lp3" path="res://scenes/HUD.tscn" id="3_sugp2"]
+
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sugp2"]
+panorama = ExtResource("1_0wfyh")
+
+[sub_resource type="Sky" id="Sky_jyhfs"]
+sky_material = SubResource("PanoramaSkyMaterial_sugp2")
+radiance_size = 0
+
+[sub_resource type="Environment" id="Environment_tbgi4"]
+background_mode = 2
+sky = SubResource("Sky_jyhfs")
+tonemap_mode = 3
+tonemap_exposure = 0.4
+ssao_enabled = true
+glow_enabled = true
+glow_blend_mode = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_o5qli"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0wfyh"]
+size = Vector3(20, 0.2, 20)
+
+[node name="Node3D" type="Node3D"]
+
+[node name="HUD" parent="." instance=ExtResource("3_sugp2")]
+player_path = NodePath("../Player")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_tbgi4")
+
+[node name="Player" parent="." instance=ExtResource("3_jyhfs")]
+look_smoothing = 8.0
+
+[node name="Floor" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.09613, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="Floor"]
+shape = SubResource("BoxShape3D_o5qli")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+mesh = SubResource("BoxMesh_0wfyh")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -0.358286, 0.933612, 0, -0.933612, -0.358286, 0, 5.41516, 0)

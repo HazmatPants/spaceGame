@@ -1,0 +1,85 @@
+[gd_scene load_steps=3 format=3 uid="uid://bh2j8pyoa7lp3"]
+
+[ext_resource type="Script" uid="uid://c6teeirpj2shv" path="res://scenes/hud.gd" id="1_fls4u"]
+[ext_resource type="Theme" uid="uid://dpcomn5ddgiow" path="res://assets/res/theme.tres" id="3_1etfg"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_fls4u")
+
+[node name="Debug" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchor_left = 0.009000001
+anchor_top = 0.014
+anchor_right = 0.009000001
+anchor_bottom = 0.014
+offset_left = -0.36800098
+offset_top = -0.0720005
+offset_right = 39.632
+offset_bottom = 39.928
+theme = ExtResource("3_1etfg")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Debug"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VelocityLabel" type="Label" parent="Debug/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Velocity: (0.00, 0.00, 0.00)"
+
+[node name="PositionLabel" type="Label" parent="Debug/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Position (Global): (0.00, 0.00, 0.00)"
+
+[node name="MovingLabel" type="Label" parent="Debug/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "NOT Moving"
+
+[node name="O2Label" type="Label" parent="Debug/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "O2: 1.0"
+
+[node name="CO2Label" type="Label" parent="Debug/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "CO2: 0.0"
+
+[node name="PlayerHUD" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("3_1etfg")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PlayerHUD"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.014
+anchor_top = 0.975
+anchor_right = 0.014
+anchor_bottom = 0.975
+offset_left = -0.12800026
+offset_top = -73.79999
+offset_right = 115.872
+offset_bottom = 0.2000122
+grow_vertical = 0
+
+[node name="ExtAtmLabel" type="Label" parent="PlayerHUD/VBoxContainer"]
+layout_mode = 2
+text = "EXT ATM: 0.0"
+
+[node name="O2Label" type="Label" parent="PlayerHUD/VBoxContainer"]
+layout_mode = 2
+text = "O2: 100%"
+
+[node name="CO2Label" type="Label" parent="PlayerHUD/VBoxContainer"]
+layout_mode = 2
+text = "CO2: 2%"
