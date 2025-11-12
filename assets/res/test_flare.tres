@@ -1,0 +1,73 @@
+[gd_resource type="Resource" script_class="FlareSettings" load_steps=13 format=3 uid="uid://deglq2jk26lh7"]
+
+[ext_resource type="Script" uid="uid://xnaxjiqa0tas" path="res://addons/lensflares/src/editor/flare_segment.gd" id="1_esqhm"]
+[ext_resource type="Texture2D" uid="uid://lymjk1kd6ea" path="res://assets/textures/flare_sheet.png" id="1_s6hog"]
+[ext_resource type="Script" uid="uid://dylqglnem8mjf" path="res://addons/lensflares/src/editor/flare_settings.gd" id="3_f2re8"]
+
+[sub_resource type="Resource" id="Resource_5c22b"]
+script = ExtResource("1_esqhm")
+rect = Rect2(0, 768, 256, 256)
+focal_scale = false
+scale = Vector2(0.5, 0.5)
+offset = 0.5
+
+[sub_resource type="Resource" id="Resource_tq7hg"]
+script = ExtResource("1_esqhm")
+rect = Rect2(256, 768, 256, 256)
+offset = 1.0
+rotate = true
+
+[sub_resource type="Resource" id="Resource_aux4e"]
+script = ExtResource("1_esqhm")
+rect = Rect2(0, 768, 256, 256)
+focal_scale = false
+scale = Vector2(0.5, 0.5)
+offset = 1.5
+
+[sub_resource type="Resource" id="Resource_45js4"]
+script = ExtResource("1_esqhm")
+rect = Rect2(0, 768, 256, 256)
+focal_scale = false
+scale = Vector2(0.25, 0.25)
+offset = 1.8
+
+[sub_resource type="Resource" id="Resource_5cfnb"]
+script = ExtResource("1_esqhm")
+rect = Rect2(256, 768, 256, 256)
+scale = Vector2(0.5, 0.5)
+offset = 2.0
+rotate = true
+
+[sub_resource type="Resource" id="Resource_0mh62"]
+script = ExtResource("1_esqhm")
+rect = Rect2(0, 768, 256, 256)
+focal_scale = false
+scale = Vector2(1.5, 1.5)
+offset = 2.5
+
+[sub_resource type="Resource" id="Resource_4hl1s"]
+script = ExtResource("1_esqhm")
+rect = Rect2(0, 768, 256, 256)
+focal_scale = false
+scale = Vector2(0.25, 0.25)
+offset = 2.8
+
+[sub_resource type="Resource" id="Resource_hvw73"]
+script = ExtResource("1_esqhm")
+rect = Rect2(256, 512, 256, 256)
+scale = Vector2(2, 2)
+offset = 3.25
+rotate = true
+
+[sub_resource type="Resource" id="Resource_g1x0q"]
+script = ExtResource("1_esqhm")
+rect = Rect2(0, 512, 256, 256)
+focal_scale = false
+scale = Vector2(5, 5)
+offset = 6.0
+
+[resource]
+script = ExtResource("3_f2re8")
+flare_tex = ExtResource("1_s6hog")
+flare_spacing = 0.25
+flare_segments = Array[ExtResource("1_esqhm")]([SubResource("Resource_5c22b"), SubResource("Resource_tq7hg"), SubResource("Resource_aux4e"), SubResource("Resource_45js4"), SubResource("Resource_5cfnb"), SubResource("Resource_0mh62"), SubResource("Resource_4hl1s"), SubResource("Resource_hvw73"), SubResource("Resource_g1x0q")])

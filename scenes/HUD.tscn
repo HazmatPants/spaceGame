@@ -1,13 +1,181 @@
-[gd_scene load_steps=3 format=3 uid="uid://bh2j8pyoa7lp3"]
+[gd_scene load_steps=10 format=3 uid="uid://bh2j8pyoa7lp3"]
 
 [ext_resource type="Script" uid="uid://c6teeirpj2shv" path="res://scenes/hud.gd" id="1_fls4u"]
 [ext_resource type="Theme" uid="uid://dpcomn5ddgiow" path="res://assets/res/theme.tres" id="3_1etfg"]
+[ext_resource type="Theme" uid="uid://d2e7b5wr5xsjx" path="res://assets/res/theme_debug.tres" id="3_7hsmw"]
+[ext_resource type="Texture2D" uid="uid://x6hgym65dwgn" path="res://assets/textures/ui/ecg.png" id="3_nysna"]
+[ext_resource type="Texture2D" uid="uid://cefqijlcff2yq" path="res://assets/textures/ui/heartgradient.png" id="4_f6qnu"]
+
+[sub_resource type="Gradient" id="Gradient_fls4u"]
+offsets = PackedFloat32Array(0, 0.009009009, 0.5675676, 0.6036036, 0.6846847, 0.6936937)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_1etfg"]
+gradient = SubResource("Gradient_fls4u")
+width = 512
+height = 512
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nysna"]
+bg_color = Color(1, 1, 1, 0.15294118)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 1, 1, 1)
+
+[sub_resource type="Theme" id="Theme_nysna"]
+default_font_size = 20
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_fls4u")
 
+[node name="PlayerHUD" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("3_1etfg")
+
+[node name="BottomLeft" type="VBoxContainer" parent="PlayerHUD"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.014
+anchor_top = 0.975
+anchor_right = 0.014
+anchor_bottom = 0.975
+offset_left = -0.12800026
+offset_top = -73.79999
+offset_right = 115.872
+offset_bottom = 0.2000122
+grow_vertical = 0
+
+[node name="SpotLabel" type="Label" parent="PlayerHUD/BottomLeft"]
+layout_mode = 2
+
+[node name="ColorRect" type="ColorRect" parent="PlayerHUD/BottomLeft"]
+custom_minimum_size = Vector2(150, 2)
+layout_mode = 2
+
+[node name="ExtAtmLabel" type="Label" parent="PlayerHUD/BottomLeft"]
+layout_mode = 2
+text = "EXT ATM: 0.0"
+
+[node name="O2Label" type="Label" parent="PlayerHUD/BottomLeft"]
+layout_mode = 2
+text = "O2: 100%"
+
+[node name="CO2Label" type="Label" parent="PlayerHUD/BottomLeft"]
+layout_mode = 2
+text = "CO2: 2%"
+
+[node name="PowerLabel" type="Label" parent="PlayerHUD/BottomLeft"]
+layout_mode = 2
+text = "BATT: 100%"
+
+[node name="Level" type="ColorRect" parent="PlayerHUD"]
+custom_minimum_size = Vector2(60, 2)
+layout_mode = 0
+offset_left = 15.0
+offset_top = 112.0
+offset_right = 75.0
+offset_bottom = 114.00012
+pivot_offset = Vector2(30, 1)
+
+[node name="RollVel" type="ColorRect" parent="PlayerHUD/Level"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 0
+offset_left = 31.0
+offset_top = -1.0
+offset_right = 33.0
+offset_bottom = 1.0
+pivot_offset = Vector2(0, 1)
+
+[node name="Down" type="ColorRect" parent="PlayerHUD/Level"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 0
+offset_left = 30.0
+offset_right = 32.0
+offset_bottom = 8.0
+pivot_offset = Vector2(1, 1)
+
+[node name="Circle" type="TextureRect" parent="PlayerHUD/Level"]
+layout_mode = 0
+offset_left = -225.00003
+offset_top = -254.99997
+offset_right = 286.99997
+offset_bottom = 257.00003
+scale = Vector2(0.125, 0.125)
+pivot_offset = Vector2(256, 256)
+texture = SubResource("GradientTexture2D_1etfg")
+
+[node name="TopLeft" type="VBoxContainer" parent="PlayerHUD"]
+layout_mode = 1
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 166.0
+offset_bottom = 44.0
+
+[node name="AzimuthLabel" type="Label" parent="PlayerHUD/TopLeft"]
+layout_mode = 2
+text = "AZIMUTH: 0°"
+
+[node name="ElevationLabel" type="Label" parent="PlayerHUD/TopLeft"]
+layout_mode = 2
+text = "ELEV: 0°"
+
+[node name="ColorRect" type="ColorRect" parent="PlayerHUD/TopLeft"]
+custom_minimum_size = Vector2(150, 2)
+layout_mode = 2
+
+[node name="ECG" type="Panel" parent="PlayerHUD"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -116.0
+offset_top = -76.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+pivot_offset = Vector2(100, 60)
+theme_override_styles/panel = SubResource("StyleBoxFlat_nysna")
+
+[node name="TextureRect" type="TextureRect" parent="PlayerHUD/ECG"]
+clip_children = 1
+layout_mode = 0
+offset_left = 10.999999
+offset_top = 10.0
+offset_right = 411.0
+offset_bottom = 401.23
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("3_nysna")
+stretch_mode = 4
+
+[node name="Gradient" type="TextureRect" parent="PlayerHUD/ECG/TextureRect"]
+layout_mode = 0
+offset_left = -172.0
+offset_right = -107.99994
+offset_bottom = 64.0
+scale = Vector2(2.67, 2.67)
+texture = ExtResource("4_f6qnu")
+
+[node name="BPMLabel" type="Label" parent="PlayerHUD/ECG"]
+layout_mode = 0
+offset_top = -19.0
+offset_right = 101.0
+offset_bottom = 4.0
+theme = SubResource("Theme_nysna")
+text = "BPM: 90"
+
 [node name="Debug" type="Control" parent="."]
-visible = false
 layout_mode = 3
 anchor_left = 0.009000001
 anchor_top = 0.014
@@ -17,7 +185,21 @@ offset_left = -0.36800098
 offset_top = -0.0720005
 offset_right = 39.632
 offset_bottom = 39.928
-theme = ExtResource("3_1etfg")
+theme = ExtResource("3_7hsmw")
+
+[node name="ColorRect" type="ColorRect" parent="Debug"]
+custom_minimum_size = Vector2(404.92, 110.41)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -7.0
+offset_top = -6.0
+offset_right = 384.275
+offset_bottom = 118.134995
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5529412)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Debug"]
 layout_mode = 0
@@ -48,38 +230,3 @@ text = "O2: 1.0"
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "CO2: 0.0"
-
-[node name="PlayerHUD" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme = ExtResource("3_1etfg")
-
-[node name="VBoxContainer" type="VBoxContainer" parent="PlayerHUD"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.014
-anchor_top = 0.975
-anchor_right = 0.014
-anchor_bottom = 0.975
-offset_left = -0.12800026
-offset_top = -73.79999
-offset_right = 115.872
-offset_bottom = 0.2000122
-grow_vertical = 0
-
-[node name="ExtAtmLabel" type="Label" parent="PlayerHUD/VBoxContainer"]
-layout_mode = 2
-text = "EXT ATM: 0.0"
-
-[node name="O2Label" type="Label" parent="PlayerHUD/VBoxContainer"]
-layout_mode = 2
-text = "O2: 100%"
-
-[node name="CO2Label" type="Label" parent="PlayerHUD/VBoxContainer"]
-layout_mode = 2
-text = "CO2: 2%"

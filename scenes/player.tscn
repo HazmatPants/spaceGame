@@ -22,3 +22,10 @@ mesh = SubResource("CapsuleMesh_sugp2")
 [node name="Camera" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.651175, 0)
 current = true
+
+[node name="SpotLight" type="SpotLight3D" parent="Camera"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35844904, 0.017193615, -0.28421697)
+visible = false
+shadow_enabled = true
+spot_range = 50.0
+spot_attenuation = 0.5

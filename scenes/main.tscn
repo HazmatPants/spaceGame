@@ -1,8 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://cqwum05n6t262"]
+[gd_scene load_steps=11 format=3 uid="uid://cqwum05n6t262"]
 
 [ext_resource type="Texture2D" uid="uid://b32d25wwrlil8" path="res://assets/textures/spaceSky.exr" id="1_0wfyh"]
 [ext_resource type="PackedScene" uid="uid://bixd4b6guwuqi" path="res://scenes/player.tscn" id="3_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://bh2j8pyoa7lp3" path="res://scenes/HUD.tscn" id="3_sugp2"]
+[ext_resource type="Script" uid="uid://b4ocpv2e1ef7u" path="res://addons/lensflares/src/lens_flare.gd" id="4_tefeu"]
+[ext_resource type="MultiMesh" uid="uid://ckquwgvl1wdsc" path="res://assets/res/test_flare.multimesh" id="5_tbgi4"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sugp2"]
 panorama = ExtResource("1_0wfyh")
@@ -47,4 +49,11 @@ shape = SubResource("BoxShape3D_o5qli")
 mesh = SubResource("BoxMesh_0wfyh")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -0.358286, 0.933612, 0, -0.933612, -0.358286, 0, 5.41516, 0)
+transform = Transform3D(1, 0, 0, 0, -0.35828596, 0.93361187, 0, -0.93361187, -0.35828596, 7.6293945e-06, 1800.5378, 1712.5979)
+
+[node name="LensFlare" type="VisibleOnScreenNotifier3D" parent="DirectionalLight3D"]
+script = ExtResource("4_tefeu")
+flare_view_dist = 12345.0
+flare_multimesh = ExtResource("5_tbgi4")
+raycast_occlusion = true
+metadata/_custom_type_script = "uid://b4ocpv2e1ef7u"

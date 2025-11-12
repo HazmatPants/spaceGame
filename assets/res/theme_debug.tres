@@ -1,0 +1,7 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://d2e7b5wr5xsjx"]
+
+[ext_resource type="FontFile" uid="uid://c3aueqcpswois" path="res://assets/fonts/JetBrainsMono-Medium.ttf" id="1_exr6c"]
+
+[resource]
+default_font = ExtResource("1_exr6c")
+default_font_size = 32

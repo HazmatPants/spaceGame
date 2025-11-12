@@ -22,14 +22,14 @@ var smoothed_roll := 0.0
 
 var is_moving: bool = false
 
-const sfx_breathe_in := [
+const sfx_breathe_in : Array[AudioStream] = [
 	preload("res://assets/audio/sfx/player/breathing/breathe_in1.wav"),
 	preload("res://assets/audio/sfx/player/breathing/breathe_in2.wav"),
 	preload("res://assets/audio/sfx/player/breathing/breathe_in3.wav"),
 	preload("res://assets/audio/sfx/player/breathing/breathe_in4.wav")
 ]
 
-const sfx_breathe_out := [
+const sfx_breathe_out : Array[AudioStream] = [
 	preload("res://assets/audio/sfx/player/breathing/breathe_out1.wav"),
 	preload("res://assets/audio/sfx/player/breathing/breathe_out2.wav"),
 	preload("res://assets/audio/sfx/player/breathing/breathe_out3.wav"),
@@ -38,13 +38,22 @@ const sfx_breathe_out := [
 
 var O2: float = 1.0
 var CO2: float = 0.0
+var suit_power: float = 1.0
+
+var heart_rate: float = 70.0
+var beat_timer: float = 0.0
+
+signal HeartBeat
+
+var flashlight: bool = false
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion:
-		mouse_delta = event.relative
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			mouse_delta = event.relative
 	if event is InputEventKey:
 		if event.keycode == KEY_ESCAPE and event.is_pressed():
 			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -78,6 +87,19 @@ func _process(delta):
 	if Input.is_action_pressed("roll_right"):
 		roll_input -= 1
 
+	if Input.is_action_just_pressed("flashlight"):
+		flashlight = !flashlight
+		$Camera/SpotLight.visible = flashlight
+		if flashlight:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_on.ogg"))
+		else:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_off.ogg"))
+
+	suit_power -= 0.00005 * delta
+
+	if flashlight:
+		suit_power -= 0.0001 * delta
+
 	breathe_timer += delta
 
 	if breathe_timer > next_breathe_time:
@@ -87,13 +109,19 @@ func _process(delta):
 		else:
 			next_breathe_time = randf_range(2.5, 3.5)
 		if breathe_cycle:
-			GLOBAL.playsound(sfx_breathe_in[randf_range(0, sfx_breathe_in.size() - 1)])
+			GLOBAL.playsound_random(sfx_breathe_in, 0.25)
 			O2 -= 0.001
 			breathe_cycle = false
 		else:
-			GLOBAL.playsound(sfx_breathe_out[randf_range(0, sfx_breathe_out.size() - 1)])
+			GLOBAL.playsound_random(sfx_breathe_out, 0.25)
 			CO2 += 0.0001
 			breathe_cycle = true
+
+	beat_timer += delta
+
+	if beat_timer >= 60 / heart_rate:
+		HeartBeat.emit()
+		beat_timer = 0.0
 
 func _physics_process(delta):
 	smoothed_mouse = smoothed_mouse.lerp(mouse_delta, clamp(look_smoothing * delta, 0.0, 1.0))
