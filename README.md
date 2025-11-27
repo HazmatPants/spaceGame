@@ -3,12 +3,12 @@ Work-in-progress space game.
 
 # Controls
 
-WASD - move
-Mouse - yaw/pitch
-Q/E - roll
-Shift - jetpack overdrive
-T - frequency analyzer toggle
-X - jetpack toggle
-Z - inertia dampener toggle
-F - spotlight toggle
+WASD - move<br>
+Mouse - yaw/pitch<br>
+Q/E - roll<br>
+Shift - jetpack overdrive<br>
+T - frequency analyzer toggle<br>
+X - jetpack toggle<br>
+Z - inertia dampener toggle<br>
+F - spotlight toggle<br>
 V - visor toggle
