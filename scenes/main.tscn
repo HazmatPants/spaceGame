@@ -6,7 +6,7 @@
 [ext_resource type="Script" uid="uid://bxsiay4alicvb" path="res://scripts/hull.gd" id="4_o6xl0"]
 [ext_resource type="Script" uid="uid://b4ocpv2e1ef7u" path="res://addons/lensflares/src/lens_flare.gd" id="4_tefeu"]
 [ext_resource type="MultiMesh" uid="uid://ckquwgvl1wdsc" path="res://assets/res/test_flare.multimesh" id="5_tbgi4"]
-[ext_resource type="AudioStream" uid="uid://bjygpip7hmivg" path="res://assets/audio/music/Music Has A Voice.wav" id="7_o6xl0"]
+[ext_resource type="AudioStream" uid="uid://ck4hyfvp1l44c" path="res://assets/audio/music/Music Has A Voice.ogg" id="7_o6xl0"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sugp2"]
 panorama = ExtResource("1_0wfyh")

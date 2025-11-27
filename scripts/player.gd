@@ -42,7 +42,7 @@ const sfx_breathe_out : Array[AudioStream] = [
 	preload("res://assets/audio/sfx/player/breathing/breathe_out4.wav")
 ]
 
-var O2: float = 0.001
+var O2: float = 1.0
 var health: float = 1.0
 var suit_power: float = 1.0
 var hull: Area3D = null
