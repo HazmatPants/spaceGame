@@ -24,7 +24,7 @@ func _ready() -> void:
 	else:
 		await type(revive_fail)
 		await get_tree().create_timer(0.2).timeout
-		$TextEdit.text = "Broadcast message from root@%s on pts/2\n\nThe system will poweroff now!\n" % randi_range(10000, 99999) 
+		$TextEdit.text = "Broadcast message from root@%s on pts/2\n\nThe system will power off now!\n" % randi_range(10000, 99999) 
 		await get_tree().create_timer(randf()).timeout
 		$TextEdit.text += "\n[%s.%s] watchdog: watchdog0: watchdog did not stop!" % [randi_range(10000, 99999), randi_range(10000, 99999)]
 		await get_tree().create_timer(0.2).timeout
