@@ -1,10 +1,12 @@
-[gd_scene load_steps=11 format=3 uid="uid://cqwum05n6t262"]
+[gd_scene load_steps=16 format=3 uid="uid://cqwum05n6t262"]
 
 [ext_resource type="Texture2D" uid="uid://b32d25wwrlil8" path="res://assets/textures/spaceSky.exr" id="1_0wfyh"]
 [ext_resource type="PackedScene" uid="uid://bixd4b6guwuqi" path="res://scenes/player.tscn" id="3_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://bh2j8pyoa7lp3" path="res://scenes/HUD.tscn" id="3_sugp2"]
+[ext_resource type="Script" uid="uid://bxsiay4alicvb" path="res://scripts/hull.gd" id="4_o6xl0"]
 [ext_resource type="Script" uid="uid://b4ocpv2e1ef7u" path="res://addons/lensflares/src/lens_flare.gd" id="4_tefeu"]
 [ext_resource type="MultiMesh" uid="uid://ckquwgvl1wdsc" path="res://assets/res/test_flare.multimesh" id="5_tbgi4"]
+[ext_resource type="AudioStream" uid="uid://bjygpip7hmivg" path="res://assets/audio/music/Music Has A Voice.wav" id="7_o6xl0"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sugp2"]
 panorama = ExtResource("1_0wfyh")
@@ -23,10 +25,19 @@ glow_enabled = true
 glow_blend_mode = 1
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_o5qli"]
-size = Vector3(20, 0.2, 20)
+size = Vector3(4, 0.2, 10)
 
 [sub_resource type="BoxMesh" id="BoxMesh_0wfyh"]
-size = Vector3(20, 0.2, 20)
+size = Vector3(4, 0.2, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tipki"]
+size = Vector3(0.2, 4, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_85g3d"]
+size = Vector3(0.2, 4, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_choun"]
+size = Vector3(3.625, 4, 9.955)
 
 [node name="Node3D" type="Node3D"]
 
@@ -37,7 +48,7 @@ player_path = NodePath("../Player")
 environment = SubResource("Environment_tbgi4")
 
 [node name="Player" parent="." instance=ExtResource("3_jyhfs")]
-look_smoothing = 8.0
+deceleration = 2.0
 
 [node name="Floor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.09613, 0)
@@ -48,6 +59,40 @@ shape = SubResource("BoxShape3D_o5qli")
 [node name="Mesh" type="MeshInstance3D" parent="Floor"]
 mesh = SubResource("BoxMesh_0wfyh")
 
+[node name="Wall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 1, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="Wall"]
+shape = SubResource("BoxShape3D_tipki")
+
+[node name="Mesh" type="MeshInstance3D" parent="Wall"]
+mesh = SubResource("BoxMesh_85g3d")
+
+[node name="Wall2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9, 1, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="Wall2"]
+shape = SubResource("BoxShape3D_tipki")
+
+[node name="Mesh" type="MeshInstance3D" parent="Wall2"]
+mesh = SubResource("BoxMesh_85g3d")
+
+[node name="Floor2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9361649, 0)
+
+[node name="Collider" type="CollisionShape3D" parent="Floor2"]
+shape = SubResource("BoxShape3D_o5qli")
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor2"]
+mesh = SubResource("BoxMesh_0wfyh")
+
+[node name="Hull" type="Area3D" parent="."]
+script = ExtResource("4_o6xl0")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hull"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8928662, 0)
+shape = SubResource("BoxShape3D_choun")
+
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -0.35828596, 0.93361187, 0, -0.93361187, -0.35828596, 7.6293945e-06, 1800.5378, 1712.5979)
 
@@ -57,3 +102,8 @@ flare_view_dist = 12345.0
 flare_multimesh = ExtResource("5_tbgi4")
 raycast_occlusion = true
 metadata/_custom_type_script = "uid://b4ocpv2e1ef7u"
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("7_o6xl0")
+autoplay = true
+bus = &"SFX"

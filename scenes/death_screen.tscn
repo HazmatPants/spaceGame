@@ -1,0 +1,59 @@
+[gd_scene load_steps=6 format=3 uid="uid://vvfa31d4g0al"]
+
+[ext_resource type="FontFile" uid="uid://b1dtnmc3j8pkr" path="res://assets/fonts/PerfectDOSVGA437.ttf" id="1_dwo6e"]
+[ext_resource type="Script" uid="uid://hrvwokewfkl3" path="res://scripts/death_screen.gd" id="2_mqh5l"]
+[ext_resource type="AudioStream" uid="uid://8d2443dj734t" path="res://assets/audio/sfx/ui/ECG_loop.wav" id="3_mqh5l"]
+
+[sub_resource type="Theme" id="Theme_mqh5l"]
+default_font = ExtResource("1_dwo6e")
+default_font_size = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dwo6e"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+draw_center = false
+
+[node name="DeathScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_mqh5l")
+script = ExtResource("2_mqh5l")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="TextEdit" type="TextEdit" parent="."]
+modulate = Color(1, 0.6, 0.6, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_dwo6e")
+theme_override_styles/focus = SubResource("StyleBoxFlat_dwo6e")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_dwo6e")
+editable = false
+context_menu_enabled = false
+emoji_menu_enabled = false
+shortcut_keys_enabled = false
+selecting_enabled = false
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+virtual_keyboard_enabled = false
+virtual_keyboard_show_on_focus = false
+middle_mouse_paste_enabled = false
+empty_selection_clipboard_enabled = false
+tab_input_mode = false
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_mqh5l")

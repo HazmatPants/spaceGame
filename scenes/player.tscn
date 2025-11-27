@@ -29,3 +29,9 @@ visible = false
 shadow_enabled = true
 spot_range = 50.0
 spot_attenuation = 0.5
+
+[node name="Area3D" type="Area3D" parent="."]
+
+[node name="Collider" type="CollisionShape3D" parent="Area3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49551, 0)
+shape = SubResource("SphereShape3D_o5qli")

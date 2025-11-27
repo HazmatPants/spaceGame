@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+@onready var area = $Area3D
+
 @export var move_speed: float = 10.0
 @export var acceleration: float = 8.0
 @export var deceleration: float = 0.5
@@ -8,7 +10,7 @@ extends CharacterBody3D
 @export var roll_speed: float = 1.0
 @export var roll_smoothing: float = 6.0
 
-@export var dampening: bool = true
+var dampening: bool = true
 
 var movement_input := Vector3.ZERO
 var smoothed_movement := Vector3.ZERO
@@ -20,7 +22,11 @@ var smoothed_mouse := Vector2.ZERO
 var roll_input := 0.0
 var smoothed_roll := 0.0
 
+var sprinting: bool = false
+
 var is_moving: bool = false
+var was_moving: bool = false
+var is_inputting: bool = false
 
 const sfx_breathe_in : Array[AudioStream] = [
 	preload("res://assets/audio/sfx/player/breathing/breathe_in1.wav"),
@@ -36,19 +42,59 @@ const sfx_breathe_out : Array[AudioStream] = [
 	preload("res://assets/audio/sfx/player/breathing/breathe_out4.wav")
 ]
 
-var O2: float = 1.0
-var CO2: float = 0.0
+var O2: float = 0.001
+var health: float = 1.0
 var suit_power: float = 1.0
+var hull: Area3D = null
+var atm: float = 0.0
+
+var O2_use_rate: float = 0.0005
+
+var regen_timer: float = 0.0
 
 var heart_rate: float = 70.0
 var beat_timer: float = 0.0
 
-signal HeartBeat
-
 var flashlight: bool = false
+var freq_analyzer: bool = false
+var visor: bool = true
+
+var ap_breathe := AudioStreamPlayer.new()
+var ap_jetpack := AudioStreamPlayer.new()
+var ap_jetpack_start := AudioStreamPlayer.new()
+
+signal HeartBeat
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+
+	ap_breathe.stream = preload("res://assets/audio/sfx/player/breathing.wav")
+	ap_breathe.autoplay = true
+	ap_breathe.volume_linear = 0.5
+	call_deferred("add_child", ap_breathe)
+
+	ap_jetpack.stream = preload("res://assets/audio/sfx/player/jetpack/jetpack_loop.wav")
+	ap_jetpack.autoplay = true
+	ap_jetpack.volume_linear = 0.0
+	call_deferred("add_child", ap_jetpack)
+
+	ap_jetpack_start.stream = preload("res://assets/audio/sfx/player/jetpack/jetpack_start.wav")
+	ap_jetpack_start.volume_linear = 0.3
+	call_deferred("add_child", ap_jetpack_start)
+
+	area.area_entered.connect(_area_entered)
+	area.area_exited.connect(_area_exited)
+
+func _area_entered(body: Node3D):
+	if body.is_in_group(&"hull"):
+		hull = body
+		atm = body.atm
+		print("Entered hull: ", body)
+
+func _area_exited(body: Node3D):
+	hull = null
+	atm = 0.0
+	print("Exited hull: ", body)
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion:
@@ -61,9 +107,12 @@ func _unhandled_input(event):
 			else:
 				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-var breathe_timer: float = 2.0
-var next_breathe_time: float = 3.0
-var breathe_cycle: bool = true # true = breathe in
+var jetpack_cooldown: float = 0.0
+
+var was_inputting: bool = false
+
+var old_power: float = suit_power
+var power_usage: float = 0.0
 
 func _process(delta):
 	movement_input = Vector3.ZERO
@@ -83,9 +132,16 @@ func _process(delta):
 		movement_input.y -= 1
 
 	if Input.is_action_pressed("roll_left"):
-		roll_input += 1
+		roll_input += 2 if sprinting else 1
 	if Input.is_action_pressed("roll_right"):
-		roll_input -= 1
+		roll_input -= 2 if sprinting else 1
+
+	is_inputting = movement_input.length() > 0.0 or abs(roll_input) > 0.0
+
+	jetpack_cooldown -= delta
+
+	if Input.is_action_just_pressed("visor"):
+		visor = !visor
 
 	if Input.is_action_just_pressed("flashlight"):
 		flashlight = !flashlight
@@ -95,33 +151,77 @@ func _process(delta):
 		else:
 			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_off.ogg"))
 
+	if Input.is_action_just_pressed("dampeners"):
+		dampening = !dampening
+		if dampening:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+		else:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
+
+	if Input.is_action_just_pressed("freq_analyzer"):
+		freq_analyzer = !freq_analyzer
+		AudioServer.get_bus_effect(1, 0).cutoff_hz = 20.0
+		GLOBAL.playsound(preload("res://assets/audio/sfx/ui/blip.wav"))
+
+	O2 = clampf(O2, 0.0, 1.0)
+	health = clampf(health, 0.0, 1.0)
+
+	if O2 <= 0.0 or (not visor and atm <= 0.0):
+		health -= 0.05 * delta
+
+	if freq_analyzer:
+		suit_power -= 0.0001 * delta
+
 	suit_power -= 0.00005 * delta
 
 	if flashlight:
 		suit_power -= 0.0001 * delta
 
-	breathe_timer += delta
+	O2 -= O2_use_rate * delta
 
-	if breathe_timer > next_breathe_time:
-		breathe_timer = 0.0
-		if O2 <= 0.05:
-			next_breathe_time = randf_range(2.0, 2.5)
-		else:
-			next_breathe_time = randf_range(2.5, 3.5)
-		if breathe_cycle:
-			GLOBAL.playsound_random(sfx_breathe_in, 0.25)
-			O2 -= 0.001
-			breathe_cycle = false
-		else:
-			GLOBAL.playsound_random(sfx_breathe_out, 0.25)
-			CO2 += 0.0001
-			breathe_cycle = true
+	heart_rate = lerp(200, 70, health)
+
+	if health < 1.0:
+		regen_timer += delta
+		if regen_timer > 2.0:
+			health += 0.01
+			regen_timer = 0.0
+	else:
+		regen_timer = 0.0
 
 	beat_timer += delta
 
 	if beat_timer >= 60 / heart_rate:
 		HeartBeat.emit()
 		beat_timer = 0.0
+
+	ap_jetpack.volume_linear = lerp(ap_jetpack.volume_linear, 0.3 if is_inputting else 0.0, 0.1)
+	ap_jetpack.pitch_scale = lerp(ap_jetpack.pitch_scale, 1.2 if sprinting else 1.0, 0.1)
+
+	ap_jetpack_start.volume_linear = lerp(ap_jetpack_start.volume_linear, 0.2 if is_inputting else 0.0, 0.1)
+
+	if Input.is_action_just_pressed("sprint") and (is_moving or abs(roll_input)):
+		ap_jetpack_start.volume_linear = 1.0
+		ap_jetpack_start.play()
+
+	if dampening and velocity.length() > 0.2:
+		suit_power -= 0.00001 * delta
+
+	if is_inputting:
+		jetpack_cooldown = 0.5
+		if sprinting:
+			suit_power -= 0.0004 * delta
+		else:
+			suit_power -= 0.0002 * delta
+
+	power_usage = (suit_power - old_power) * 1e5
+
+	if health <= 0.0:
+		get_tree().change_scene_to_packed(preload("res://scenes/death_screen.tscn"))
+
+	was_moving = is_moving
+	was_inputting = is_inputting
+	old_power = suit_power
 
 func _physics_process(delta):
 	smoothed_mouse = smoothed_mouse.lerp(mouse_delta, clamp(look_smoothing * delta, 0.0, 1.0))
@@ -145,14 +245,18 @@ func _physics_process(delta):
 					 localbasis.y * smoothed_movement.y +
 					 localbasis.z * smoothed_movement.z)
 
+	sprinting = Input.is_action_pressed("sprint")
+
+	var speed = move_speed * 2 if sprinting else move_speed
+
 	if movement_input != Vector3.ZERO:
-		accumulated_velocity += direction * move_speed * delta
+		accumulated_velocity += direction * speed * delta
 
 	if dampening and movement_input == Vector3.ZERO:
 		accumulated_velocity = accumulated_velocity.lerp(Vector3.ZERO, clamp(deceleration * delta, 0.0, 1.0))
 
 	velocity = accumulated_velocity
 
-	is_moving = velocity.length() > 0.001
+	is_moving = velocity.length() > 0.25
 
 	move_and_slide()

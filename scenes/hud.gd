@@ -6,6 +6,13 @@ var player: CharacterBody3D
 @onready var playerHUD = $PlayerHUD
 @onready var O2Label = $PlayerHUD/BottomLeft/O2Label
 @onready var PowerLabel = $PlayerHUD/BottomLeft/PowerLabel
+@onready var PowerUsageLabel = $PlayerHUD/BottomLeft/PowerUsageLabel
+
+var O2TimeLabel: Label
+var SpotLabel: Label
+var StatusLabel: Label
+var FreqAnalyzerLabel: Label
+var DampLabel: Label
 
 var warn_timer: float = 0.0
 
@@ -16,66 +23,132 @@ func _ready():
 
 	player.HeartBeat.connect(HeartBeat)
 
+	SpotLabel = new_label("SpotLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
+	FreqAnalyzerLabel = new_label("FreqAnalyzerLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
+	DampLabel = new_label("DampLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
+
+	O2TimeLabel = new_label("O2TimeLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
+	StatusLabel = new_label("StatusLabel", "Status: OK", $PlayerHUD/BottomLeft/StatusContainer)
+
+var power_usage: float = 0.0
+
 func _process(delta):
 	playerHUD.modulate.a = randf_range(0.75, 0.8)
 
 	if player == null:
 		return
 
+	if player.hull:
+		$PlayerHUD/BottomLeft/ExtAtmLabel.text = "EXT ATM: %.1f" % player.hull.atm
+	else:
+		$PlayerHUD/BottomLeft/ExtAtmLabel.text = "EXT ATM: 0.0"
+
+	O2TimeLabel.text = "O2Δ: T-%s" % [int(player.O2 / player.O2_use_rate)]
+
 	if player.O2 <= 0.1:
 		warn_timer += delta
 		if player.O2 <= 0.05:
 			O2Label.text = "O2: %.1f%% < CRITICAL !" % [player.O2 * 100]
-			if warn_timer < 0.5:
+			if warn_timer < 0.25:
 				O2Label.modulate = Color.WHITE
 			else:
 				O2Label.modulate = Color.RED
 		else:
 			O2Label.text = "O2: %.1f%% < LOW !" % [player.O2 * 100]
-			if warn_timer < 0.5:
+			if warn_timer < 0.25:
 				O2Label.modulate = Color.WHITE
 			else:
 				O2Label.modulate = Color.YELLOW
 	else:
 		O2Label.text = "O2: %.1f%%" % [player.O2 * 100]
+	if player.health < 0.5:
+		if player.health < 0.25:
+			if warn_timer < 0.25:
+				$PlayerHUD/HealthLabel.modulate = Color.WHITE
+			else:
+				$PlayerHUD/HealthLabel.modulate = Color.RED
+		else:
+			if warn_timer < 0.25:
+				$PlayerHUD/HealthLabel.modulate = Color.WHITE
+			else:
+				$PlayerHUD/HealthLabel.modulate = Color.YELLOW
+	else:
+		$PlayerHUD/HealthLabel.modulate = Color.WHITE
 
 	if player.suit_power <= 0.1:
 		warn_timer += delta
 		if player.suit_power <= 0.05:
 			PowerLabel.text = "BATT: %.1f%% < CRITICAL !" % [player.suit_power * 100]
-			if warn_timer < 0.5:
+			if warn_timer < 0.25:
 				PowerLabel.modulate = Color.WHITE
 			else:
 				PowerLabel.modulate = Color.RED
 		else:
 			PowerLabel.text = "BATT: %.1f%% < LOW !" % [player.suit_power * 100]
-			if warn_timer < 0.5:
+			if warn_timer < 0.25:
 				PowerLabel.modulate = Color.WHITE
 			else:
 				PowerLabel.modulate = Color.YELLOW
 	else:
 		PowerLabel.text = "BATT: %.1f%%" % [player.suit_power * 100]
 
-	if warn_timer > 1.0:
+	power_usage = lerp(power_usage, abs(player.power_usage), 0.1)
+
+	PowerUsageLabel.text = "USAGE: %.2f" % power_usage
+
+	if warn_timer > 0.5:
 		warn_timer = 0.0
 		if player.O2 <= 0.05:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/blip.wav"))
-
-	$PlayerHUD/BottomLeft/CO2Label.text = "CO2: %.1f%%" % [player.CO2 * 100]
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/warn.wav"))
 
 	$PlayerHUD/Level.rotation = player.rotation.z
-	$PlayerHUD/Level/RollVel.scale.x = -player.smoothed_roll * 15
+
+	var level_pos = player.rotation.x * 450
+
+	$PlayerHUD/Level.position.x = ($PlayerHUD/Crosshair.position.x + sin(-$PlayerHUD/Level.rotation) * level_pos) - 28
+	$PlayerHUD/Level.position.y = $PlayerHUD/Crosshair.position.y + cos(-$PlayerHUD/Level.rotation) * level_pos
 
 	var rot = player.rotation_degrees
 
 	$PlayerHUD/TopLeft/AzimuthLabel.text = "AZIMUTH: %.1f°" % fposmod(rot.y, 360.0)
 	$PlayerHUD/TopLeft/ElevationLabel.text = "ELEV: %.1f°" % rot.x
 
-	$PlayerHUD/BottomLeft/SpotLabel.text = "SPOTLIGHT ON" if player.flashlight else ""
+	SpotLabel.text = "SPOTLIGHT ON" if player.flashlight else ""
 
-	$PlayerHUD/ECG/BPMLabel.text = "BPM: %s" % str(int(player.heart_rate))
+	FreqAnalyzerLabel.text = "FREQ ANALYZER ON" if player.freq_analyzer else ""
+
+	DampLabel.text = "DAMPENERS ON" if player.dampening else ""
+
+	$PlayerHUD/HealthLabel.text = "H: %s" % [int(player.health * 100)]
+
+	$PlayerHUD/RegenBG.modulate.a = player.regen_timer - 1.0
+	$PlayerHUD/RegenBG.size = $PlayerHUD/HealthLabel.size
+
 	if $PlayerHUD/ECG/TextureRect/Gradient.position.x < 400:
-		$PlayerHUD/ECG/TextureRect/Gradient.position.x += 15
+		$PlayerHUD/ECG/TextureRect/Gradient.position.x += 15 * (player.heart_rate / 100)
+
+	$PlayerHUD/ECG/TextureRect.self_modulate = Color(1.0, player.health, player.health)
+
+	if is_zero_approx(player.atm):
+		StatusLabel.text = "Status: IN VACUUM"
+	else:
+		StatusLabel.text = "Status: OK"
+
+	$VisorOverlay.visible = player.visor
+	$PlayerHUD.visible = player.visor
+
+	var blur = $BlurSharp.material.get_shader_parameter("blur_sharp")
+
+	if player.O2 <= 0.0 or (not player.visor and player.atm <= 0.0):
+		$BlurSharp.material.set_shader_parameter("blur_sharp", lerp(blur, -5.0, 0.005))
+		if warn_timer > 0.25:
+			$PlayerHUD/AsphyxLabel.visible = false
+		else:
+			$PlayerHUD/AsphyxLabel.visible = true
+	else:
+		$BlurSharp.material.set_shader_parameter("blur_sharp", lerp(blur, 0.0, 0.005))
+
+	$Blackout.modulate.a = 1.0 - player.health
 
 	# Debug Menu
 	if Input.is_action_just_pressed("debug"):
@@ -89,8 +162,15 @@ func _process(delta):
 
 		$Debug/VBoxContainer/MovingLabel.text = "    Moving" if player.is_moving else "NOT Moving"
 		$Debug/VBoxContainer/O2Label.text = "O2: %f" % player.O2
-		$Debug/VBoxContainer/CO2Label.text = "CO2: %f" % player.CO2
 
 func HeartBeat():
-	GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ECG.wav"), 0.001)
 	$PlayerHUD/ECG/TextureRect/Gradient.position.x = -172
+	await get_tree().create_timer(0.1).timeout
+	GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ECG.wav"), lerp(0.05, 0.001, player.health))
+
+func new_label(label_name: String, text: String, parent: Control) -> Label:
+	var label = Label.new()
+	label.name = label_name
+	label.text = text
+	parent.add_child(label)
+	return label
