@@ -6,13 +6,14 @@ var player: CharacterBody3D
 @onready var playerHUD = $PlayerHUD
 @onready var O2Label = $PlayerHUD/BottomLeft/O2Label
 @onready var PowerLabel = $PlayerHUD/BottomLeft/PowerLabel
-@onready var PowerUsageLabel = $PlayerHUD/BottomLeft/PowerUsageLabel
+@onready var PowerUsageBar = $PlayerHUD/BottomLeft/HBoxContainer/CenterContainer/PowerUsageBar
 
 var O2TimeLabel: Label
 var SpotLabel: Label
 var StatusLabel: Label
 var FreqAnalyzerLabel: Label
 var DampLabel: Label
+var JetpackLabel: Label
 
 var warn_timer: float = 0.0
 
@@ -26,6 +27,7 @@ func _ready():
 	SpotLabel = new_label("SpotLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 	FreqAnalyzerLabel = new_label("FreqAnalyzerLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 	DampLabel = new_label("DampLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
+	JetpackLabel = new_label("JetpackLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 
 	O2TimeLabel = new_label("O2TimeLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 	StatusLabel = new_label("StatusLabel", "Status: OK", $PlayerHUD/BottomLeft/StatusContainer)
@@ -94,7 +96,8 @@ func _process(delta):
 
 	power_usage = lerp(power_usage, abs(player.power_usage), 0.1)
 
-	PowerUsageLabel.text = "USAGE: %.2f" % power_usage
+	PowerUsageBar.value = power_usage
+	PowerUsageBar.modulate = Color(1.0, 1.5 - power_usage, 1.5 - power_usage)
 
 	if warn_timer > 0.5:
 		warn_timer = 0.0
@@ -118,6 +121,8 @@ func _process(delta):
 	FreqAnalyzerLabel.text = "FREQ ANALYZER ON" if player.freq_analyzer else ""
 
 	DampLabel.text = "DAMPENERS ON" if player.dampening else ""
+
+	JetpackLabel.text = "JETPACK ON" if player.jetpack else ""
 
 	$PlayerHUD/HealthLabel.text = "H: %s" % [int(player.health * 100)]
 

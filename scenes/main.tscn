@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://cqwum05n6t262"]
+[gd_scene load_steps=15 format=3 uid="uid://cqwum05n6t262"]
 
 [ext_resource type="Texture2D" uid="uid://b32d25wwrlil8" path="res://assets/textures/spaceSky.exr" id="1_0wfyh"]
 [ext_resource type="PackedScene" uid="uid://bixd4b6guwuqi" path="res://scenes/player.tscn" id="3_jyhfs"]
@@ -6,7 +6,6 @@
 [ext_resource type="Script" uid="uid://bxsiay4alicvb" path="res://scripts/hull.gd" id="4_o6xl0"]
 [ext_resource type="Script" uid="uid://b4ocpv2e1ef7u" path="res://addons/lensflares/src/lens_flare.gd" id="4_tefeu"]
 [ext_resource type="MultiMesh" uid="uid://ckquwgvl1wdsc" path="res://assets/res/test_flare.multimesh" id="5_tbgi4"]
-[ext_resource type="AudioStream" uid="uid://ck4hyfvp1l44c" path="res://assets/audio/music/Music Has A Voice.ogg" id="7_o6xl0"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_sugp2"]
 panorama = ExtResource("1_0wfyh")
@@ -50,46 +49,48 @@ environment = SubResource("Environment_tbgi4")
 [node name="Player" parent="." instance=ExtResource("3_jyhfs")]
 deceleration = 2.0
 
-[node name="Floor" type="StaticBody3D" parent="."]
+[node name="Ship" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="Ship"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.09613, 0)
 
-[node name="Collider" type="CollisionShape3D" parent="Floor"]
+[node name="Collider" type="CollisionShape3D" parent="Ship/Floor"]
 shape = SubResource("BoxShape3D_o5qli")
 
-[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+[node name="Mesh" type="MeshInstance3D" parent="Ship/Floor"]
 mesh = SubResource("BoxMesh_0wfyh")
 
-[node name="Wall" type="StaticBody3D" parent="."]
+[node name="Wall" type="StaticBody3D" parent="Ship"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.9, 1, 0)
 
-[node name="Collider" type="CollisionShape3D" parent="Wall"]
+[node name="Collider" type="CollisionShape3D" parent="Ship/Wall"]
 shape = SubResource("BoxShape3D_tipki")
 
-[node name="Mesh" type="MeshInstance3D" parent="Wall"]
+[node name="Mesh" type="MeshInstance3D" parent="Ship/Wall"]
 mesh = SubResource("BoxMesh_85g3d")
 
-[node name="Wall2" type="StaticBody3D" parent="."]
+[node name="Wall2" type="StaticBody3D" parent="Ship"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9, 1, 0)
 
-[node name="Collider" type="CollisionShape3D" parent="Wall2"]
+[node name="Collider" type="CollisionShape3D" parent="Ship/Wall2"]
 shape = SubResource("BoxShape3D_tipki")
 
-[node name="Mesh" type="MeshInstance3D" parent="Wall2"]
+[node name="Mesh" type="MeshInstance3D" parent="Ship/Wall2"]
 mesh = SubResource("BoxMesh_85g3d")
 
-[node name="Floor2" type="StaticBody3D" parent="."]
+[node name="Floor2" type="StaticBody3D" parent="Ship"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9361649, 0)
 
-[node name="Collider" type="CollisionShape3D" parent="Floor2"]
+[node name="Collider" type="CollisionShape3D" parent="Ship/Floor2"]
 shape = SubResource("BoxShape3D_o5qli")
 
-[node name="Mesh" type="MeshInstance3D" parent="Floor2"]
+[node name="Mesh" type="MeshInstance3D" parent="Ship/Floor2"]
 mesh = SubResource("BoxMesh_0wfyh")
 
-[node name="Hull" type="Area3D" parent="."]
+[node name="Hull" type="Area3D" parent="Ship"]
 script = ExtResource("4_o6xl0")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Hull"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ship/Hull"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8928662, 0)
 shape = SubResource("BoxShape3D_choun")
 
@@ -102,8 +103,3 @@ flare_view_dist = 12345.0
 flare_multimesh = ExtResource("5_tbgi4")
 raycast_occlusion = true
 metadata/_custom_type_script = "uid://b4ocpv2e1ef7u"
-
-[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("7_o6xl0")
-autoplay = true
-bus = &"SFX"

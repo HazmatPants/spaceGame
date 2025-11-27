@@ -28,19 +28,19 @@ var is_moving: bool = false
 var was_moving: bool = false
 var is_inputting: bool = false
 
-const sfx_breathe_in : Array[AudioStream] = [
-	preload("res://assets/audio/sfx/player/breathing/breathe_in1.wav"),
-	preload("res://assets/audio/sfx/player/breathing/breathe_in2.wav"),
-	preload("res://assets/audio/sfx/player/breathing/breathe_in3.wav"),
-	preload("res://assets/audio/sfx/player/breathing/breathe_in4.wav")
-]
-
-const sfx_breathe_out : Array[AudioStream] = [
-	preload("res://assets/audio/sfx/player/breathing/breathe_out1.wav"),
-	preload("res://assets/audio/sfx/player/breathing/breathe_out2.wav"),
-	preload("res://assets/audio/sfx/player/breathing/breathe_out3.wav"),
-	preload("res://assets/audio/sfx/player/breathing/breathe_out4.wav")
-]
+#const sfx_breathe_in : Array[AudioStream] = [
+	#preload("res://assets/audio/sfx/player/breathing/breathe_in1.wav"),
+	#preload("res://assets/audio/sfx/player/breathing/breathe_in2.wav"),
+	#preload("res://assets/audio/sfx/player/breathing/breathe_in3.wav"),
+	#preload("res://assets/audio/sfx/player/breathing/breathe_in4.wav")
+#]
+#
+#const sfx_breathe_out : Array[AudioStream] = [
+	#preload("res://assets/audio/sfx/player/breathing/breathe_out1.wav"),
+	#preload("res://assets/audio/sfx/player/breathing/breathe_out2.wav"),
+	#preload("res://assets/audio/sfx/player/breathing/breathe_out3.wav"),
+	#preload("res://assets/audio/sfx/player/breathing/breathe_out4.wav")
+#]
 
 var O2: float = 1.0
 var health: float = 1.0
@@ -56,12 +56,14 @@ var heart_rate: float = 70.0
 var beat_timer: float = 0.0
 
 var flashlight: bool = false
+var jetpack: bool = false
 var freq_analyzer: bool = false
 var visor: bool = true
 
 var ap_breathe := AudioStreamPlayer.new()
 var ap_jetpack := AudioStreamPlayer.new()
 var ap_jetpack_start := AudioStreamPlayer.new()
+var ap_freq_analyzer := AudioStreamPlayer.new()
 
 signal HeartBeat
 
@@ -81,6 +83,10 @@ func _ready():
 	ap_jetpack_start.stream = preload("res://assets/audio/sfx/player/jetpack/jetpack_start.wav")
 	ap_jetpack_start.volume_linear = 0.3
 	call_deferred("add_child", ap_jetpack_start)
+
+	ap_freq_analyzer.stream = preload("res://assets/audio/sfx/ui/freqanalyzer.wav")
+	ap_freq_analyzer.volume_linear = 0.1
+	call_deferred("add_child", ap_freq_analyzer)
 
 	area.area_entered.connect(_area_entered)
 	area.area_exited.connect(_area_exited)
@@ -136,7 +142,7 @@ func _process(delta):
 	if Input.is_action_pressed("roll_right"):
 		roll_input -= 2 if sprinting else 1
 
-	is_inputting = movement_input.length() > 0.0 or abs(roll_input) > 0.0
+	is_inputting = movement_input.length() > 0.0
 
 	jetpack_cooldown -= delta
 
@@ -161,7 +167,20 @@ func _process(delta):
 	if Input.is_action_just_pressed("freq_analyzer"):
 		freq_analyzer = !freq_analyzer
 		AudioServer.get_bus_effect(1, 0).cutoff_hz = 20.0
-		GLOBAL.playsound(preload("res://assets/audio/sfx/ui/blip.wav"))
+		ap_freq_analyzer.playing = freq_analyzer
+		if freq_analyzer:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+		else:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
+
+	if Input.is_action_just_pressed("jetpack"):
+		jetpack = !jetpack
+		if jetpack:
+			ap_jetpack_start.play()
+			ap_jetpack_start.volume_linear = 1.0
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+		else:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
 
 	O2 = clampf(O2, 0.0, 1.0)
 	health = clampf(health, 0.0, 1.0)
@@ -195,19 +214,26 @@ func _process(delta):
 		HeartBeat.emit()
 		beat_timer = 0.0
 
-	ap_jetpack.volume_linear = lerp(ap_jetpack.volume_linear, 0.3 if is_inputting else 0.0, 0.1)
+	if jetpack:
+		suit_power -= 0.0002 * delta
+		if is_inputting:
+			ap_jetpack.volume_linear = lerp(ap_jetpack.volume_linear, 0.3, 0.1)
+		else:
+			ap_jetpack.volume_linear = lerp(ap_jetpack.volume_linear, 0.1, 0.1)
+	else:
+		ap_jetpack.volume_linear = lerp(ap_jetpack.volume_linear, 0.0, 0.1)
+
 	ap_jetpack.pitch_scale = lerp(ap_jetpack.pitch_scale, 1.2 if sprinting else 1.0, 0.1)
+	ap_jetpack_start.volume_linear = lerp(ap_jetpack_start.volume_linear, 0.2 if is_inputting and jetpack else 0.0, 0.05)
 
-	ap_jetpack_start.volume_linear = lerp(ap_jetpack_start.volume_linear, 0.2 if is_inputting else 0.0, 0.1)
-
-	if Input.is_action_just_pressed("sprint") and (is_moving or abs(roll_input)):
+	if Input.is_action_just_pressed("sprint") and is_moving:
 		ap_jetpack_start.volume_linear = 1.0
 		ap_jetpack_start.play()
 
 	if dampening and velocity.length() > 0.2:
 		suit_power -= 0.00001 * delta
 
-	if is_inputting:
+	if is_inputting and jetpack:
 		jetpack_cooldown = 0.5
 		if sprinting:
 			suit_power -= 0.0004 * delta
@@ -249,7 +275,7 @@ func _physics_process(delta):
 
 	var speed = move_speed * 2 if sprinting else move_speed
 
-	if movement_input != Vector3.ZERO:
+	if movement_input != Vector3.ZERO and jetpack:
 		accumulated_velocity += direction * speed * delta
 
 	if dampening and movement_input == Vector3.ZERO:
