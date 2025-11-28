@@ -59,6 +59,19 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("GradientTexture2D_f6qnu")
 
+[node name="NoPowerLabel" type="Label" parent="."]
+modulate = Color(1, 0, 0, 1)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 17.0
+offset_top = -39.0
+offset_right = 218.0
+offset_bottom = -16.0
+grow_vertical = 0
+theme = ExtResource("3_1etfg")
+text = "LOW POWER MODE"
+
 [node name="PlayerHUD" type="Control" parent="."]
 layout_mode = 3
 anchors_preset = 15
@@ -163,24 +176,32 @@ offset_bottom = 8.000061
 pivot_offset = Vector2(1, 1)
 mouse_filter = 2
 
-[node name="TopLeft" type="VBoxContainer" parent="PlayerHUD"]
+[node name="AzimuthLabel" type="Label" parent="PlayerHUD"]
 layout_mode = 1
-offset_left = 16.0
-offset_top = 16.0
-offset_right = 166.0
-offset_bottom = 44.0
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -79.0
+offset_right = 79.0
+offset_bottom = 23.0
+grow_horizontal = 2
+text = "0°"
+horizontal_alignment = 1
 
-[node name="AzimuthLabel" type="Label" parent="PlayerHUD/TopLeft"]
-layout_mode = 2
-text = "AZIMUTH: 0°"
-
-[node name="ElevationLabel" type="Label" parent="PlayerHUD/TopLeft"]
-layout_mode = 2
-text = "ELEV: 0°"
-
-[node name="ColorRect" type="ColorRect" parent="PlayerHUD/TopLeft"]
-custom_minimum_size = Vector2(150, 2)
-layout_mode = 2
+[node name="ElevationLabel" type="Label" parent="PlayerHUD"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.546
+anchor_top = 0.5
+anchor_right = 0.546
+anchor_bottom = 0.5
+offset_left = 0.0079956055
+offset_top = -11.5
+offset_right = 150.008
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "0°"
 
 [node name="ECG" type="Panel" parent="PlayerHUD"]
 layout_mode = 1
@@ -189,9 +210,9 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -116.0
-offset_top = -76.0
-offset_right = -16.0
+offset_left = -122.0
+offset_top = -40.0
+offset_right = -22.0
 offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
@@ -201,37 +222,36 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_nysna")
 [node name="TextureRect" type="TextureRect" parent="PlayerHUD/ECG"]
 clip_children = 1
 layout_mode = 0
-offset_left = 10.999999
-offset_top = 10.0
-offset_right = 411.0
-offset_bottom = 401.23
+offset_left = 1.0
+offset_top = 3.0
+offset_right = 491.0
+offset_bottom = 93.0
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("3_nysna")
-stretch_mode = 4
+expand_mode = 1
 
 [node name="Gradient" type="TextureRect" parent="PlayerHUD/ECG/TextureRect"]
 layout_mode = 0
 offset_left = -172.0
-offset_right = -107.99994
+offset_right = -108.0
 offset_bottom = 64.0
 scale = Vector2(2.67, 2.67)
 texture = ExtResource("4_f6qnu")
 
-[node name="RegenBG" type="ColorRect" parent="PlayerHUD"]
-layout_mode = 0
-offset_left = 1036.0
-offset_top = 547.0
-offset_right = 1107.0
-offset_bottom = 571.0
-color = Color(0, 0.7254902, 0, 1)
-
 [node name="HealthLabel" type="Label" parent="PlayerHUD"]
 layout_mode = 0
-offset_left = 1036.0
-offset_top = 547.0
-offset_right = 1123.0
-offset_bottom = 570.0
+offset_left = 1031.0
+offset_top = 583.0
+offset_right = 1118.0
+offset_bottom = 606.0
 text = "H: 100"
+
+[node name="RegenBG" type="ColorRect" parent="PlayerHUD/HealthLabel"]
+show_behind_parent = true
+layout_mode = 0
+offset_right = 71.0
+offset_bottom = 24.0
+color = Color(0, 0.7254902, 0, 1)
 
 [node name="AsphyxLabel" type="Label" parent="PlayerHUD"]
 visible = false
@@ -299,11 +319,6 @@ text = "NOT Moving"
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "O2: 1.0"
-
-[node name="CO2Label" type="Label" parent="Debug/VBoxContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "CO2: 0.0"
 
 [node name="BlurSharp" type="ColorRect" parent="."]
 material = SubResource("ShaderMaterial_k4w17")

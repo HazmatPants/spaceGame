@@ -45,6 +45,7 @@ var is_inputting: bool = false
 var O2: float = 1.0
 var health: float = 1.0
 var suit_power: float = 1.0
+
 var hull: Area3D = null
 var atm: float = 0.0
 
@@ -150,37 +151,41 @@ func _process(delta):
 		visor = !visor
 
 	if Input.is_action_just_pressed("flashlight"):
-		flashlight = !flashlight
-		$Camera/SpotLight.visible = flashlight
-		if flashlight:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_on.ogg"))
-		else:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_off.ogg"))
+		if suit_power > 0.0:
+			flashlight = !flashlight
+			$Camera/SpotLight.visible = flashlight
+			if flashlight:
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_on.ogg"))
+			else:
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_off.ogg"))
 
 	if Input.is_action_just_pressed("dampeners"):
-		dampening = !dampening
-		if dampening:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
-		else:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
+		if suit_power > 0.0:
+			dampening = !dampening
+			if dampening:
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+			else:
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
 
 	if Input.is_action_just_pressed("freq_analyzer"):
-		freq_analyzer = !freq_analyzer
-		AudioServer.get_bus_effect(1, 0).cutoff_hz = 20.0
-		ap_freq_analyzer.playing = freq_analyzer
-		if freq_analyzer:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
-		else:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
+		if suit_power > 0.0:
+			freq_analyzer = !freq_analyzer
+			AudioServer.get_bus_effect(1, 0).cutoff_hz = 20.0
+			ap_freq_analyzer.playing = freq_analyzer
+			if freq_analyzer:
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+			else:
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
 
 	if Input.is_action_just_pressed("jetpack"):
-		jetpack = !jetpack
-		if jetpack:
-			ap_jetpack_start.play()
-			ap_jetpack_start.volume_linear = 1.0
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
-		else:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
+		if suit_power > 0.0:
+			jetpack = !jetpack
+			if jetpack:
+				ap_jetpack_start.play()
+				ap_jetpack_start.volume_linear = 1.0
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+			else:
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
 
 	O2 = clampf(O2, 0.0, 1.0)
 	health = clampf(health, 0.0, 1.0)
@@ -226,7 +231,7 @@ func _process(delta):
 	ap_jetpack.pitch_scale = lerp(ap_jetpack.pitch_scale, 1.2 if sprinting else 1.0, 0.1)
 	ap_jetpack_start.volume_linear = lerp(ap_jetpack_start.volume_linear, 0.2 if is_inputting and jetpack else 0.0, 0.05)
 
-	if Input.is_action_just_pressed("sprint") and is_moving:
+	if Input.is_action_just_pressed("sprint") and is_moving and jetpack:
 		ap_jetpack_start.volume_linear = 1.0
 		ap_jetpack_start.play()
 
@@ -240,10 +245,16 @@ func _process(delta):
 		else:
 			suit_power -= 0.0002 * delta
 
-	power_usage = (suit_power - old_power) * 1e5
+	power_usage = suit_power - old_power
 
 	if health <= 0.0:
 		get_tree().change_scene_to_packed(preload("res://scenes/death_screen.tscn"))
+
+	if old_power > 0.0 and suit_power <= 0.0:
+		GLOBAL.playsound(preload("res://assets/audio/sfx/ui/warn.wav"))
+		jetpack = false
+		freq_analyzer = false
+		ap_freq_analyzer.playing = false
 
 	was_moving = is_moving
 	was_inputting = is_inputting
@@ -275,8 +286,11 @@ func _physics_process(delta):
 
 	var speed = move_speed * 2 if sprinting else move_speed
 
-	if movement_input != Vector3.ZERO and jetpack:
-		accumulated_velocity += direction * speed * delta
+	if movement_input != Vector3.ZERO: 
+		if jetpack:
+			accumulated_velocity += direction * speed * delta
+		else:
+			accumulated_velocity += direction * (speed / 10) * delta
 
 	if dampening and movement_input == Vector3.ZERO:
 		accumulated_velocity = accumulated_velocity.lerp(Vector3.ZERO, clamp(deceleration * delta, 0.0, 1.0))

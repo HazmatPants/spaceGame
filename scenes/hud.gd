@@ -9,6 +9,7 @@ var player: CharacterBody3D
 @onready var PowerUsageBar = $PlayerHUD/BottomLeft/HBoxContainer/CenterContainer/PowerUsageBar
 
 var O2TimeLabel: Label
+var BattTimeLabel: Label
 var SpotLabel: Label
 var StatusLabel: Label
 var FreqAnalyzerLabel: Label
@@ -26,13 +27,15 @@ func _ready():
 
 	SpotLabel = new_label("SpotLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 	FreqAnalyzerLabel = new_label("FreqAnalyzerLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
-	DampLabel = new_label("DampLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 	JetpackLabel = new_label("JetpackLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
+	DampLabel = new_label("DampLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 
 	O2TimeLabel = new_label("O2TimeLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
+	BattTimeLabel = new_label("BattTimeLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 	StatusLabel = new_label("StatusLabel", "Status: OK", $PlayerHUD/BottomLeft/StatusContainer)
 
 var power_usage: float = 0.0
+var power_delta: int = 0
 
 func _process(delta):
 	playerHUD.modulate.a = randf_range(0.75, 0.8)
@@ -46,6 +49,10 @@ func _process(delta):
 		$PlayerHUD/BottomLeft/ExtAtmLabel.text = "EXT ATM: 0.0"
 
 	O2TimeLabel.text = "O2Δ: T-%s" % [int(player.O2 / player.O2_use_rate)]
+
+	power_delta = lerp(power_delta, int(player.suit_power / abs(player.power_usage) / 60), 0.1)
+
+	BattTimeLabel.text = "BATTΔ: T-%s" % power_delta
 
 	if player.O2 <= 0.1:
 		warn_timer += delta
@@ -94,7 +101,7 @@ func _process(delta):
 	else:
 		PowerLabel.text = "BATT: %.1f%%" % [player.suit_power * 100]
 
-	power_usage = lerp(power_usage, abs(player.power_usage), 0.1)
+	power_usage = lerp(power_usage, abs(player.power_usage * 1e5), 0.1)
 
 	PowerUsageBar.value = power_usage
 	PowerUsageBar.modulate = Color(1.0, 1.5 - power_usage, 1.5 - power_usage)
@@ -113,21 +120,36 @@ func _process(delta):
 
 	var rot = player.rotation_degrees
 
-	$PlayerHUD/TopLeft/AzimuthLabel.text = "AZIMUTH: %.1f°" % fposmod(rot.y, 360.0)
-	$PlayerHUD/TopLeft/ElevationLabel.text = "ELEV: %.1f°" % rot.x
+	$PlayerHUD/AzimuthLabel.text = "%.1f°" % fposmod(rot.y, 360.0)
+	$PlayerHUD/ElevationLabel.text = "%.1f°" % rot.x
 
 	SpotLabel.text = "SPOTLIGHT ON" if player.flashlight else ""
 
-	FreqAnalyzerLabel.text = "FREQ ANALYZER ON" if player.freq_analyzer else ""
+	if player.freq_analyzer:
+		FreqAnalyzerLabel.text = "FREQ ANALYZER ON" 
+		FreqAnalyzerLabel.modulate = Color.GREEN
+	else:
+		FreqAnalyzerLabel.text = "FREQ ANALYZER OFF" 
+		FreqAnalyzerLabel.modulate = Color.RED
 
-	DampLabel.text = "DAMPENERS ON" if player.dampening else ""
+	if player.dampening:
+		DampLabel.text = "DAMPENERS ON"
+		DampLabel.modulate = Color.GREEN
+	else:
+		DampLabel.modulate = Color.RED
+		DampLabel.text = "DAMPENERS OFF"
 
-	JetpackLabel.text = "JETPACK ON" if player.jetpack else ""
+	if player.jetpack:
+		JetpackLabel.text = "JETPACK ON"
+		JetpackLabel.modulate = Color.GREEN
+	else:
+		JetpackLabel.modulate = Color.RED
+		JetpackLabel.text = "JETPACK OFF"
 
 	$PlayerHUD/HealthLabel.text = "H: %s" % [int(player.health * 100)]
 
-	$PlayerHUD/RegenBG.modulate.a = player.regen_timer - 1.0
-	$PlayerHUD/RegenBG.size = $PlayerHUD/HealthLabel.size
+	$PlayerHUD/HealthLabel/RegenBG.modulate.a = player.regen_timer - 1.0
+	$PlayerHUD/HealthLabel/RegenBG.size = $PlayerHUD/HealthLabel.size
 
 	if $PlayerHUD/ECG/TextureRect/Gradient.position.x < 400:
 		$PlayerHUD/ECG/TextureRect/Gradient.position.x += 15 * (player.heart_rate / 100)
@@ -140,7 +162,13 @@ func _process(delta):
 		StatusLabel.text = "Status: OK"
 
 	$VisorOverlay.visible = player.visor
-	$PlayerHUD.visible = player.visor
+	$PlayerHUD.visible = player.visor and not player.suit_power <= 0.0
+	$NoPowerLabel.visible = player.suit_power <= 0.0
+
+	$NoPowerLabel.modulate.a = lerp($NoPowerLabel.modulate.a, 0.5, 0.05)
+
+	if warn_timer > 0.25:
+		$NoPowerLabel.modulate.a = 1.0
 
 	var blur = $BlurSharp.material.get_shader_parameter("blur_sharp")
 
