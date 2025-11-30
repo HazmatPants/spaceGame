@@ -1,4 +1,4 @@
-[gd_resource type="AudioBusLayout" load_steps=5 format=3 uid="uid://dnfx767wihkns"]
+[gd_resource type="AudioBusLayout" load_steps=6 format=3 uid="uid://dnfx767wihkns"]
 
 [sub_resource type="AudioEffectLowPassFilter" id="AudioEffectLowPassFilter_g28q7"]
 resource_name = "LowPassFilter"
@@ -16,6 +16,9 @@ post_gain = -20.0
 resource_name = "HighPassFilter"
 cutoff_hz = 200.0
 
+[sub_resource type="AudioEffectLowPassFilter" id="AudioEffectLowPassFilter_n8wo2"]
+resource_name = "LowPassFilter"
+
 [resource]
 bus/0/effect/0/effect = SubResource("AudioEffectLowPassFilter_g28q7")
 bus/0/effect/0/enabled = true
@@ -31,3 +34,11 @@ bus/1/effect/1/effect = SubResource("AudioEffectDistortion_j3pel")
 bus/1/effect/1/enabled = true
 bus/1/effect/2/effect = SubResource("AudioEffectHighPassFilter_j3pel")
 bus/1/effect/2/enabled = true
+bus/2/name = &"Bone Conduction"
+bus/2/solo = false
+bus/2/mute = false
+bus/2/bypass_fx = false
+bus/2/volume_db = 0.0
+bus/2/send = &"Master"
+bus/2/effect/0/effect = SubResource("AudioEffectLowPassFilter_n8wo2")
+bus/2/effect/0/enabled = true

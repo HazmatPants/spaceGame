@@ -12,6 +12,9 @@ func _process(_delta: float) -> void:
 
 	if player.atm > 0.0:
 		lowpass = 2000.0
+		AudioServer.get_bus_effect(2, 0).cutoff_hz = 2000.0
+	else:
+		AudioServer.get_bus_effect(2, 0).cutoff_hz = 200.0
 
 	AudioServer.set_bus_effect_enabled(1, 2, player.freq_analyzer)
 
@@ -26,13 +29,14 @@ func _process(_delta: float) -> void:
 
 	AudioServer.get_bus_effect(0, 0).cutoff_hz = lerp(100, 20500, player.health)
 
-func playsound(stream: AudioStream, volume_linear: float=1.0):
+func playsound(stream: AudioStream, volume_linear: float=1.0, bus="SFX"):
 	var ap = AudioStreamPlayer.new()
 	ap.stream = stream
 	ap.volume_linear = volume_linear
+	ap.bus = bus
 	add_child(ap)
 	ap.play()
 	ap.finished.connect(ap.queue_free)
 
-func playsound_random(streams: Array[AudioStream], volume_linear: float=1.0):
-	playsound(streams[randi_range(0, streams.size() - 1)], volume_linear)
+func playsound_random(streams: Array[AudioStream], volume_linear: float=1.0, bus="SFX"):
+	playsound(streams[randi_range(0, streams.size() - 1)], volume_linear, bus)

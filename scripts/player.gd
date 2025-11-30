@@ -1,6 +1,8 @@
 extends CharacterBody3D
 
+@onready var camera = $Camera
 @onready var area = $Area3D
+@onready var floor_ray = $FloorRay
 
 @export var move_speed: float = 10.0
 @export var acceleration: float = 8.0
@@ -56,10 +58,12 @@ var regen_timer: float = 0.0
 var heart_rate: float = 70.0
 var beat_timer: float = 0.0
 
+var tpv: bool = false
 var flashlight: bool = false
 var jetpack: bool = false
 var freq_analyzer: bool = false
 var visor: bool = true
+var magnet: bool = false
 
 var ap_breathe := AudioStreamPlayer.new()
 var ap_jetpack := AudioStreamPlayer.new()
@@ -67,6 +71,20 @@ var ap_jetpack_start := AudioStreamPlayer.new()
 var ap_freq_analyzer := AudioStreamPlayer.new()
 
 signal HeartBeat
+
+const sfx_footstep: Array[AudioStream] = [
+	preload("res://assets/audio/sfx/player/footsteps/metal_step1.ogg"),
+	preload("res://assets/audio/sfx/player/footsteps/metal_step2.ogg"),
+	preload("res://assets/audio/sfx/player/footsteps/metal_step3.ogg"),
+	preload("res://assets/audio/sfx/player/footsteps/metal_step4.ogg")
+]
+
+const sfx_magboot_step: Array[AudioStream] = [
+	preload("res://assets/audio/sfx/player/magboots/MagnetStep1.wav"),
+	preload("res://assets/audio/sfx/player/magboots/MagnetStep2.wav"),
+	preload("res://assets/audio/sfx/player/magboots/MagnetStep3.wav"),
+	preload("res://assets/audio/sfx/player/magboots/MagnetStep4.wav")
+]
 
 func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -117,9 +135,12 @@ func _unhandled_input(event):
 var jetpack_cooldown: float = 0.0
 
 var was_inputting: bool = false
+var magnet_prox: bool = false
 
 var old_power: float = suit_power
 var power_usage: float = 0.0
+
+var footstep_timer: float = 0.0
 
 func _process(delta):
 	movement_input = Vector3.ZERO
@@ -134,18 +155,55 @@ func _process(delta):
 	if Input.is_action_pressed("move_right"):
 		movement_input.x += 1
 	if Input.is_action_pressed("move_up"):
+		if magnet:
+			accumulated_velocity += global_transform.basis.y 
+			magnet = false
+			GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetStop.wav"), 1.0, "Bone Conduction")
 		movement_input.y += 1
-	if Input.is_action_pressed("move_down"):
-		movement_input.y -= 1
 
-	if Input.is_action_pressed("roll_left"):
-		roll_input += 2 if sprinting else 1
-	if Input.is_action_pressed("roll_right"):
-		roll_input -= 2 if sprinting else 1
+	if not magnet:
+		if Input.is_action_pressed("move_down"):
+			movement_input.y -= 1
+		if Input.is_action_pressed("roll_left"):
+			roll_input += 2 if sprinting else 1
+		if Input.is_action_pressed("roll_right"):
+			roll_input -= 2 if sprinting else 1
 
 	is_inputting = movement_input.length() > 0.0
 
+	if is_moving and magnet:
+		footstep_timer += delta * 2.5 if sprinting else delta * 2
+	else:
+		footstep_timer = 0.5
+
+	if footstep_timer > 1.0 and footstep_timer < 1.1:
+		GLOBAL.playsound_random(sfx_magboot_step, 0.3, "Bone Conduction")
+		footstep_timer = 0.0
+
 	jetpack_cooldown -= delta
+
+	if tpv:
+		camera.position = camera.position.lerp(Vector3(0.5, 1.0, 3.5), 0.1)
+	else:
+		camera.position = camera.position.lerp(Vector3(0, 0.65, 0.0), 0.2)
+
+	if Input.is_action_just_pressed("switch_view"):
+		tpv = !tpv
+
+	if Input.is_action_just_pressed("magnet"):
+		if magnet:
+			magnet = false
+			GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetStop.wav"), 1.0, "Bone Conduction")
+		elif floor_ray.is_colliding():
+			var collider = floor_ray.get_collider()
+			if collider:
+				magnet = true
+				jetpack = false
+				GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetStart.wav"), 1.0, "Bone Conduction")
+
+	if magnet:
+		global_transform = global_transform.interpolate_with(align_with_y(global_transform, floor_ray.get_collision_normal()), 0.3)
+		global_position = global_position.lerp(floor_ray.get_collision_point() + floor_ray.get_collision_normal(), 0.3)
 
 	if Input.is_action_just_pressed("visor"):
 		visor = !visor
@@ -155,17 +213,17 @@ func _process(delta):
 			flashlight = !flashlight
 			$Camera/SpotLight.visible = flashlight
 			if flashlight:
-				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_on.ogg"))
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_on.ogg"), 1.0, "Master")
 			else:
-				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_off.ogg"))
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ui_light_off.ogg"), 1.0, "Master")
 
 	if Input.is_action_just_pressed("dampeners"):
 		if suit_power > 0.0:
 			dampening = !dampening
 			if dampening:
-				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"), 1.0, "Master")
 			else:
-				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"), 1.0, "Master")
 
 	if Input.is_action_just_pressed("freq_analyzer"):
 		if suit_power > 0.0:
@@ -173,19 +231,22 @@ func _process(delta):
 			AudioServer.get_bus_effect(1, 0).cutoff_hz = 20.0
 			ap_freq_analyzer.playing = freq_analyzer
 			if freq_analyzer:
-				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"), 1.0, "Master")
 			else:
-				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"), 1.0, "Master")
 
 	if Input.is_action_just_pressed("jetpack"):
 		if suit_power > 0.0:
 			jetpack = !jetpack
 			if jetpack:
+				if magnet:
+					magnet = false
+					GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetStop.wav"))
 				ap_jetpack_start.play()
 				ap_jetpack_start.volume_linear = 1.0
-				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"))
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/on.wav"), 1.0, "Master")
 			else:
-				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"))
+				GLOBAL.playsound(preload("res://assets/audio/sfx/ui/off.wav"), 1.0, "Master")
 
 	O2 = clampf(O2, 0.0, 1.0)
 	health = clampf(health, 0.0, 1.0)
@@ -256,16 +317,26 @@ func _process(delta):
 		freq_analyzer = false
 		ap_freq_analyzer.playing = false
 
+	if floor_ray.is_colliding() and not magnet_prox:
+		if not magnet:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetProximity.wav"), 1.0, "Master")
+
 	was_moving = is_moving
 	was_inputting = is_inputting
 	old_power = suit_power
+	magnet_prox = floor_ray.is_colliding()
 
 func _physics_process(delta):
 	smoothed_mouse = smoothed_mouse.lerp(mouse_delta, clamp(look_smoothing * delta, 0.0, 1.0))
 
 	var yaw = -smoothed_mouse.x * mouse_sensitivity
 	var pitch = -smoothed_mouse.y * mouse_sensitivity
-	rotate_object_local(Vector3(1, 0, 0), pitch)
+	if magnet:
+		camera.rotate_object_local(Vector3(1, 0, 0), pitch)
+		camera.rotation_degrees.x = clampf(camera.rotation_degrees.x, -90, 90)
+	else:
+		rotate_object_local(Vector3(1, 0, 0), pitch)
+		camera.rotation = camera.rotation.lerp(Vector3.ZERO, 0.1)
 	rotate_object_local(Vector3(0, 1, 0), yaw)
 
 	mouse_delta = Vector2.ZERO
@@ -295,8 +366,20 @@ func _physics_process(delta):
 	if dampening and movement_input == Vector3.ZERO:
 		accumulated_velocity = accumulated_velocity.lerp(Vector3.ZERO, clamp(deceleration * delta, 0.0, 1.0))
 
-	velocity = accumulated_velocity
+	if magnet:
+		velocity = direction * speed
+		if movement_input == Vector3.ZERO:
+			velocity = Vector3.ZERO
+			smoothed_movement = Vector3.ZERO
+	else:
+		velocity = accumulated_velocity
 
 	is_moving = velocity.length() > 0.25
 
 	move_and_slide()
+
+func align_with_y(xform, new_y):
+	xform.basis.y = new_y
+	xform.basis.x = -xform.basis.z.cross(new_y)
+	xform.basis = xform.basis.orthonormalized()
+	return xform

@@ -8,8 +8,8 @@ var player: CharacterBody3D
 @onready var PowerLabel = $PlayerHUD/BottomLeft/PowerLabel
 @onready var PowerUsageBar = $PlayerHUD/BottomLeft/HBoxContainer/CenterContainer/PowerUsageBar
 
-var O2TimeLabel: Label
-var BattTimeLabel: Label
+@onready var O2TimeLabel: Label = $PlayerHUD/BottomLeft/O2TimeLabel
+@onready var BattTimeLabel: Label = $PlayerHUD/BottomLeft/PowerTimeLabel
 var SpotLabel: Label
 var StatusLabel: Label
 var FreqAnalyzerLabel: Label
@@ -30,8 +30,6 @@ func _ready():
 	JetpackLabel = new_label("JetpackLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 	DampLabel = new_label("DampLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 
-	O2TimeLabel = new_label("O2TimeLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
-	BattTimeLabel = new_label("BattTimeLabel", "", $PlayerHUD/BottomLeft/StatusContainer)
 	StatusLabel = new_label("StatusLabel", "Status: OK", $PlayerHUD/BottomLeft/StatusContainer)
 
 var power_usage: float = 0.0
@@ -43,16 +41,23 @@ func _process(delta):
 	if player == null:
 		return
 
+	$PlayerHUD/MagnetProxLabel.visible = player.magnet_prox
+	if player.magnet_prox:
+		if player.magnet:
+			$PlayerHUD/MagnetProxLabel.text = "____M____"
+		else:
+			$PlayerHUD/MagnetProxLabel.text = "_M_"
+
 	if player.hull:
 		$PlayerHUD/BottomLeft/ExtAtmLabel.text = "EXT ATM: %.1f" % player.hull.atm
 	else:
 		$PlayerHUD/BottomLeft/ExtAtmLabel.text = "EXT ATM: 0.0"
 
-	O2TimeLabel.text = "O2Δ: T-%s" % [int(player.O2 / player.O2_use_rate)]
+	O2TimeLabel.text = "O2Δ: %s" % [format_seconds(int(player.O2 / player.O2_use_rate))]
 
 	power_delta = lerp(power_delta, int(player.suit_power / abs(player.power_usage) / 60), 0.1)
 
-	BattTimeLabel.text = "BATTΔ: T-%s" % power_delta
+	BattTimeLabel.text = "BATTΔ: %s" % format_seconds(int(power_delta))
 
 	if player.O2 <= 0.1:
 		warn_timer += delta
@@ -122,6 +127,7 @@ func _process(delta):
 
 	$PlayerHUD/AzimuthLabel.text = "%.1f°" % fposmod(rot.y, 360.0)
 	$PlayerHUD/ElevationLabel.text = "%.1f°" % rot.x
+	$PlayerHUD/SpeedLabel.text = "%.1f m/s" % player.velocity.length()
 
 	SpotLabel.text = "SPOTLIGHT ON" if player.flashlight else ""
 
@@ -207,3 +213,10 @@ func new_label(label_name: String, text: String, parent: Control) -> Label:
 	label.text = text
 	parent.add_child(label)
 	return label
+
+func format_seconds(seconds: int) -> String:
+	if seconds > 3600:
+		return str(int((seconds / 60.0) / 60.0)) + " hrs"
+	if seconds > 60:
+		return str(int(seconds / 60.0))  + " min"
+	return str(seconds) + " sec"
