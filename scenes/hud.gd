@@ -9,7 +9,6 @@ var player: CharacterBody3D
 @onready var PowerUsageBar = $PlayerHUD/BottomLeft/HBoxContainer/CenterContainer/PowerUsageBar
 
 @onready var O2TimeLabel: Label = $PlayerHUD/BottomLeft/O2TimeLabel
-@onready var BattTimeLabel: Label = $PlayerHUD/BottomLeft/PowerTimeLabel
 var SpotLabel: Label
 var StatusLabel: Label
 var FreqAnalyzerLabel: Label
@@ -57,8 +56,6 @@ func _process(delta):
 
 	power_delta = lerp(power_delta, int(player.suit_power / abs(player.power_usage) / 60), 0.1)
 
-	BattTimeLabel.text = "BATTΔ: %s" % format_seconds(int(power_delta))
-
 	if player.O2 <= 0.1:
 		warn_timer += delta
 		if player.O2 <= 0.05:
@@ -92,21 +89,20 @@ func _process(delta):
 	if player.suit_power <= 0.1:
 		warn_timer += delta
 		if player.suit_power <= 0.05:
-			PowerLabel.text = "BATT: %.1f%% < CRITICAL !" % [player.suit_power * 100]
 			if warn_timer < 0.25:
 				PowerLabel.modulate = Color.WHITE
 			else:
 				PowerLabel.modulate = Color.RED
 		else:
-			PowerLabel.text = "BATT: %.1f%% < LOW !" % [player.suit_power * 100]
 			if warn_timer < 0.25:
 				PowerLabel.modulate = Color.WHITE
 			else:
 				PowerLabel.modulate = Color.YELLOW
-	else:
-		PowerLabel.text = "BATT: %.1f%%" % [player.suit_power * 100]
+	PowerLabel.text = "BATT: %.1f%% [%s]" % [player.suit_power * 100, format_seconds(int(power_delta))]
 
 	power_usage = lerp(power_usage, abs(player.power_usage * 1e5), 0.1)
+	if is_nan(power_usage):
+		power_usage = 0.0
 
 	PowerUsageBar.value = power_usage
 	PowerUsageBar.modulate = Color(1.0, 1.5 - power_usage, 1.5 - power_usage)
@@ -118,15 +114,21 @@ func _process(delta):
 
 	$PlayerHUD/Level.rotation = player.rotation.z
 
+	if player.magnet:
+		$PlayerHUD/Level.modulate.a = lerpf($PlayerHUD/Level.modulate.a, 0.0, 0.1)
+	else:
+		$PlayerHUD/Level.modulate.a = $PlayerHUD/Crosshair.position.distance_to($PlayerHUD/Level.position) / 100
+
 	var level_pos = player.rotation.x * 450
 
 	$PlayerHUD/Level.position.x = ($PlayerHUD/Crosshair.position.x + sin(-$PlayerHUD/Level.rotation) * level_pos) - 28
 	$PlayerHUD/Level.position.y = $PlayerHUD/Crosshair.position.y + cos(-$PlayerHUD/Level.rotation) * level_pos
 
-	var rot = player.rotation_degrees
-
-	$PlayerHUD/AzimuthLabel.text = "%.1f°" % fposmod(rot.y, 360.0)
-	$PlayerHUD/ElevationLabel.text = "%.1f°" % rot.x
+	$PlayerHUD/AzimuthLabel.text = "%.1f°" % fposmod(player.rotation_degrees.y, 360.0)
+	if player.magnet:
+		$PlayerHUD/ElevationLabel.text = "%.1f°" % player.camera.rotation_degrees.x
+	else:
+		$PlayerHUD/ElevationLabel.text = "%.1f°" % player.rotation_degrees.x
 	$PlayerHUD/SpeedLabel.text = "%.1f m/s" % player.velocity.length()
 
 	SpotLabel.text = "SPOTLIGHT ON" if player.flashlight else ""
@@ -201,6 +203,7 @@ func _process(delta):
 
 		$Debug/VBoxContainer/MovingLabel.text = "    Moving" if player.is_moving else "NOT Moving"
 		$Debug/VBoxContainer/O2Label.text = "O2: %f" % player.O2
+		$Debug/VBoxContainer/PowerUsageLabel.text = "Power Usage: %f" % player.power_usage
 
 func HeartBeat():
 	$PlayerHUD/ECG/TextureRect/Gradient.position.x = -172

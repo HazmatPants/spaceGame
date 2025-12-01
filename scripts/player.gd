@@ -136,9 +136,10 @@ var jetpack_cooldown: float = 0.0
 
 var was_inputting: bool = false
 var magnet_prox: bool = false
+var magnet_disable: bool = false
 
 var old_power: float = suit_power
-var power_usage: float = 0.0
+var power_usage: float = INF
 
 var footstep_timer: float = 0.0
 
@@ -192,6 +193,7 @@ func _process(delta):
 
 	if Input.is_action_just_pressed("magnet"):
 		if magnet:
+			magnet_disable = true
 			magnet = false
 			GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetStop.wav"), 1.0, "Bone Conduction")
 		elif floor_ray.is_colliding():
@@ -200,6 +202,18 @@ func _process(delta):
 				magnet = true
 				jetpack = false
 				GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetStart.wav"), 1.0, "Bone Conduction")
+
+	if floor_ray.is_colliding() and not magnet:
+		var collider = floor_ray.get_collider()
+		if collider and not magnet_disable:
+			if floor_ray.global_position.distance_to(floor_ray.get_collision_point()) < 0.03:
+				magnet = true
+				jetpack = false
+				GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetStart.wav"), 1.0, "Bone Conduction")
+	if not floor_ray.is_colliding():
+		magnet_disable = false
+	elif floor_ray.global_position.distance_to(floor_ray.get_collision_point()) > 0.05:
+		magnet_disable = false
 
 	if magnet:
 		global_transform = global_transform.interpolate_with(align_with_y(global_transform, floor_ray.get_collision_normal()), 0.3)
@@ -240,6 +254,7 @@ func _process(delta):
 			jetpack = !jetpack
 			if jetpack:
 				if magnet:
+					magnet_disable = true
 					magnet = false
 					GLOBAL.playsound(preload("res://assets/audio/sfx/player/magboots/MagnetStop.wav"))
 				ap_jetpack_start.play()
@@ -258,6 +273,9 @@ func _process(delta):
 		suit_power -= 0.0001 * delta
 
 	suit_power -= 0.00005 * delta
+
+	if magnet:
+		suit_power -= 0.00005 * delta
 
 	if flashlight:
 		suit_power -= 0.0001 * delta
