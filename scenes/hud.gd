@@ -8,7 +8,6 @@ var player: CharacterBody3D
 @onready var PowerLabel = $PlayerHUD/BottomLeft/PowerLabel
 @onready var PowerUsageBar = $PlayerHUD/BottomLeft/HBoxContainer/CenterContainer/PowerUsageBar
 
-@onready var O2TimeLabel: Label = $PlayerHUD/BottomLeft/O2TimeLabel
 var SpotLabel: Label
 var StatusLabel: Label
 var FreqAnalyzerLabel: Label
@@ -18,6 +17,8 @@ var JetpackLabel: Label
 var warn_timer: float = 0.0
 
 func _ready():
+	$Blackout.show()
+
 	if player_path != null:
 		player = get_node(player_path)
 	$Debug.visible = false
@@ -47,31 +48,23 @@ func _process(delta):
 		else:
 			$PlayerHUD/MagnetProxLabel.text = "_M_"
 
-	if player.hull:
-		$PlayerHUD/BottomLeft/ExtAtmLabel.text = "EXT ATM: %.1f" % player.hull.atm
-	else:
-		$PlayerHUD/BottomLeft/ExtAtmLabel.text = "EXT ATM: 0.0"
-
-	O2TimeLabel.text = "O2Δ: %s" % [format_seconds(int(player.O2 / player.O2_use_rate))]
-
 	power_delta = lerp(power_delta, int(player.suit_power / abs(player.power_usage) / 60), 0.1)
 
 	if player.O2 <= 0.1:
 		warn_timer += delta
 		if player.O2 <= 0.05:
-			O2Label.text = "O2: %.1f%% < CRITICAL !" % [player.O2 * 100]
 			if warn_timer < 0.25:
 				O2Label.modulate = Color.WHITE
 			else:
 				O2Label.modulate = Color.RED
 		else:
-			O2Label.text = "O2: %.1f%% < LOW !" % [player.O2 * 100]
 			if warn_timer < 0.25:
 				O2Label.modulate = Color.WHITE
 			else:
 				O2Label.modulate = Color.YELLOW
-	else:
-		O2Label.text = "O2: %.1f%%" % [player.O2 * 100]
+
+	O2Label.text = "O2: %.1f%% [%s]" % [player.O2 * 100, format_seconds(int(player.O2 / player.O2_use_rate))]
+
 	if player.health < 0.5:
 		if player.health < 0.25:
 			if warn_timer < 0.25:
@@ -110,7 +103,7 @@ func _process(delta):
 	if warn_timer > 0.5:
 		warn_timer = 0.0
 		if player.O2 <= 0.05:
-			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/warn.wav"))
+			GLOBAL.playsound(preload("res://assets/audio/sfx/ui/warn.wav"), 1.0, "Master")
 
 	$PlayerHUD/Level.rotation = player.rotation.z
 
@@ -180,13 +173,14 @@ func _process(delta):
 
 	var blur = $BlurSharp.material.get_shader_parameter("blur_sharp")
 
-	if player.O2 <= 0.0 or (not player.visor and player.atm <= 0.0):
+	if (player.O2 <= 0.0 and not player.atm > 0.0) or (not player.visor and player.atm <= 0.0):
 		$BlurSharp.material.set_shader_parameter("blur_sharp", lerp(blur, -5.0, 0.005))
 		if warn_timer > 0.25:
 			$PlayerHUD/AsphyxLabel.visible = false
 		else:
 			$PlayerHUD/AsphyxLabel.visible = true
 	else:
+		$PlayerHUD/AsphyxLabel.visible = false
 		$BlurSharp.material.set_shader_parameter("blur_sharp", lerp(blur, 0.0, 0.005))
 
 	$Blackout.modulate.a = 1.0 - player.health
@@ -208,7 +202,7 @@ func _process(delta):
 func HeartBeat():
 	$PlayerHUD/ECG/TextureRect/Gradient.position.x = -172
 	await get_tree().create_timer(0.1).timeout
-	GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ECG.wav"), lerp(0.05, 0.001, player.health))
+	GLOBAL.playsound(preload("res://assets/audio/sfx/ui/ECG.wav"), lerp(0.01, 0.0005, player.health), "Master")
 
 func new_label(label_name: String, text: String, parent: Control) -> Label:
 	var label = Label.new()

@@ -91,7 +91,7 @@ func _ready():
 
 	ap_breathe.stream = preload("res://assets/audio/sfx/player/breathing.wav")
 	ap_breathe.autoplay = true
-	ap_breathe.volume_linear = 0.5
+	ap_breathe.volume_linear = 0.1
 	call_deferred("add_child", ap_breathe)
 
 	ap_jetpack.stream = preload("res://assets/audio/sfx/player/jetpack/jetpack_loop.wav")
@@ -221,6 +221,10 @@ func _process(delta):
 
 	if Input.is_action_just_pressed("visor"):
 		visor = !visor
+		if visor:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/player/VisorOn.wav"), 1.0, "Master")
+		else:
+			GLOBAL.playsound(preload("res://assets/audio/sfx/player/VisorOff.wav"), 1.0, "Master")
 
 	if Input.is_action_just_pressed("flashlight"):
 		if suit_power > 0.0:
@@ -266,7 +270,7 @@ func _process(delta):
 	O2 = clampf(O2, 0.0, 1.0)
 	health = clampf(health, 0.0, 1.0)
 
-	if O2 <= 0.0 or (not visor and atm <= 0.0):
+	if (O2 <= 0.0 and not atm > 0.0) or (not visor and atm <= 0.0):
 		health -= 0.05 * delta
 
 	if freq_analyzer:
@@ -280,7 +284,8 @@ func _process(delta):
 	if flashlight:
 		suit_power -= 0.0001 * delta
 
-	O2 -= O2_use_rate * delta
+	if atm <= 0.0 and visor:
+		O2 -= O2_use_rate * delta
 
 	heart_rate = lerp(200, 70, health)
 
@@ -296,6 +301,7 @@ func _process(delta):
 
 	if beat_timer >= 60 / heart_rate:
 		HeartBeat.emit()
+		GLOBAL.playsound(preload("res://assets/audio/sfx/player/heart_thump.ogg"), 1.1 - health, "Master")
 		beat_timer = 0.0
 
 	if jetpack:
@@ -308,7 +314,7 @@ func _process(delta):
 		ap_jetpack.volume_linear = lerp(ap_jetpack.volume_linear, 0.0, 0.1)
 
 	ap_jetpack.pitch_scale = lerp(ap_jetpack.pitch_scale, 1.2 if sprinting else 1.0, 0.1)
-	ap_jetpack_start.volume_linear = lerp(ap_jetpack_start.volume_linear, 0.2 if is_inputting and jetpack else 0.0, 0.05)
+	ap_jetpack_start.volume_linear = lerp(ap_jetpack_start.volume_linear, 0.2 if is_inputting and jetpack else 0.0, 0.03)
 
 	if Input.is_action_just_pressed("sprint") and is_moving and jetpack:
 		ap_jetpack_start.volume_linear = 1.0
